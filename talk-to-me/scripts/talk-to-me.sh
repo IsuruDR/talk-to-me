@@ -120,14 +120,12 @@ fi
 # Avoid slang, contractions like "wanna/gonna", rhetorical questions,
 # and emoji. Use clear, simple sentences that sound natural when read
 # with flat intonation.
-PROMPT="You are a voice notification assistant. A coding session just finished. Based on the conversation below, write ONE short sentence (under 15 words) saying what was done. End by saying the user should take a look.
+PROMPT="A coding session just finished. Summarize what was done in ONE sentence under 15 words. Only describe what actually happened in the conversation below. Do not invent or assume work that is not mentioned.
 
-Rules for the sentence:
-- Use simple, clear words. No slang, no contractions like wanna or gonna.
-- No emoji, no exclamation marks, no quotation marks.
-- Write it as a plain statement, not a question.
-- Example good output: Finished setting up the new auth module. You should take a look.
-- Example bad output: Just knocked out the auth stuff, wanna check it out?
+Rules:
+- Simple clear words. No slang. No contractions like wanna or gonna.
+- No emoji. No exclamation marks. No quotation marks. No questions.
+- Plain statement only.
 
 $PROMPT_CONTEXT
 
