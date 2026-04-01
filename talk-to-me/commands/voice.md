@@ -17,7 +17,8 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
   "piper_voice": "en_US-lessac-high",
   "voice": "Daniel",
   "rate": null,
-  "model": "qwen2.5:3b"
+  "model": "qwen2.5:3b",
+  "min_duration": 60
 }
 ```
 
@@ -26,6 +27,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
 - `voice`: voice name for say/espeak/spd-say engines. `null` means system default.
 - `rate`: speech rate override (words per minute) for say/espeak/spd-say. `null` means system default.
 - `model`: ollama model for summarization. `null` means auto-detect the smallest available model.
+- `min_duration`: minimum seconds the agent must work before speaking a summary. Default `60`. Set to `0` to always speak.
 
 ## Behavior
 
@@ -43,6 +45,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
    - Change the TTS engine
    - Change the voice
    - Change the summarization model
+   - Change the minimum duration threshold
    - Reset to defaults
 
 ## TTS Engine Selection
@@ -88,6 +91,7 @@ If the user passes arguments to this command:
 - `/talk-to-me:voice engine <name>` — set the TTS engine (piper, say, espeak)
 - `/talk-to-me:voice set <name>` — set the voice for the current engine
 - `/talk-to-me:voice model <name>` — set the ollama model
+- `/talk-to-me:voice duration <seconds>` — set minimum duration before speaking (default 60)
 - `/talk-to-me:voice reset` — reset to system defaults (delete config file)
 - `/talk-to-me:voice list` — list available engines, voices, and models
 - No arguments — run the full interactive flow

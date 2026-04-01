@@ -43,14 +43,36 @@ if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
 fi
 
-# Check elapsed time — only speak if the agent worked for over 60 seconds
+# Read all user config upfront
+CONFIG_FILE="$HOME/.config/talk-to-me/config.json"
+MIN_DURATION=60
+VOICE=""
+RATE=""
+MODEL=""
+TTS_ENGINE=""
+PIPER_VOICE=""
+
+if [ -f "$CONFIG_FILE" ]; then
+  MIN_DURATION=$(jq -r '.min_duration // 60' "$CONFIG_FILE")
+  VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
+  RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")
+  MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
+  TTS_ENGINE=$(jq -r '.tts_engine // empty' "$CONFIG_FILE")
+  PIPER_VOICE=$(jq -r '.piper_voice // empty' "$CONFIG_FILE")
+fi
+
+# Default piper voice
+[ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
+
+# Check elapsed time — only speak if the agent worked long enough
+
 PROMPT_DIR="/tmp/talk-to-me-prompts"
 TS_FILE="$PROMPT_DIR/$SESSION_ID.ts"
 if [ -n "$SESSION_ID" ] && [ -f "$TS_FILE" ]; then
   START_TS=$(cat "$TS_FILE")
   NOW_TS=$(date +%s)
   ELAPSED=$((NOW_TS - START_TS))
-  if [ "$ELAPSED" -lt 60 ]; then
+  if [ "$ELAPSED" -lt "$MIN_DURATION" ]; then
     rm -f "$TS_FILE" "$PROMPT_DIR/$SESSION_ID.txt"
     exit 0
   fi
@@ -83,25 +105,6 @@ fi
 if ! ollama list &>/dev/null 2>&1; then
   exit 0
 fi
-
-# Read user config
-CONFIG_FILE="$HOME/.config/talk-to-me/config.json"
-VOICE=""
-RATE=""
-MODEL=""
-TTS_ENGINE=""
-PIPER_VOICE=""
-
-if [ -f "$CONFIG_FILE" ]; then
-  VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
-  RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")
-  MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
-  TTS_ENGINE=$(jq -r '.tts_engine // empty' "$CONFIG_FILE")
-  PIPER_VOICE=$(jq -r '.piper_voice // empty' "$CONFIG_FILE")
-fi
-
-# Default piper voice
-[ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
 
 # Auto-detect ollama model
 if [ -z "$MODEL" ]; then
