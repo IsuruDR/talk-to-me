@@ -35,11 +35,20 @@ if [ ! -f "$NUDGE_FILE" ]; then
   touch "$NUDGE_FILE"
 fi
 
-# Get the transcript path from the Stop hook input
+# Get session info from the Stop hook input
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty')
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
 
 if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
+fi
+
+# Read the user's most recent prompt (saved by UserPromptSubmit hook)
+USER_PROMPT=""
+PROMPT_FILE="/tmp/talk-to-me-prompts/$SESSION_ID.txt"
+if [ -n "$SESSION_ID" ] && [ -f "$PROMPT_FILE" ]; then
+  USER_PROMPT=$(head -c 500 "$PROMPT_FILE")
+  rm -f "$PROMPT_FILE"
 fi
 
 # Extract the last few assistant text messages from the transcript (tail for recency)
@@ -94,11 +103,22 @@ if [ -z "$MODEL" ]; then
   exit 0
 fi
 
-# Summarize with ollama
-PROMPT="You are a casual notification voice assistant. A coding session just finished. Based on the recent conversation below, write ONE short casual sentence (under 15 words) saying what was accomplished. Sound like a chill coworker giving a quick update. Don't use quotes or punctuation marks that would sound weird spoken aloud. Don't start with 'Hey' or 'So'.
+# Build the ollama prompt with user question + assistant context
+PROMPT_CONTEXT=""
+if [ -n "$USER_PROMPT" ]; then
+  PROMPT_CONTEXT="User asked: $USER_PROMPT
 
-Recent conversation:
-$CONTEXT
+Assistant's work (truncated):
+$CONTEXT"
+else
+  PROMPT_CONTEXT="Recent conversation:
+$CONTEXT"
+fi
+
+# Summarize with ollama
+PROMPT="You are a casual notification voice assistant. A coding session just finished. Based on the conversation below, write ONE short casual sentence (under 15 words) saying what was accomplished in response to the user's request. ALWAYS end with a question asking the user to take a look. Sound like a chill coworker giving a quick update. Don't use quotes or punctuation marks that would sound weird spoken aloud. Don't start with 'Hey' or 'So'.
+
+$PROMPT_CONTEXT
 
 Your one-sentence casual summary:"
 

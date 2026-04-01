@@ -74,7 +74,7 @@ When the user wants to change the ollama summarization model:
 3. If the user wants a model that isn't pulled yet, offer to pull it with `ollama pull <model>`
 4. Let them test the model by running a sample summarization:
    ```
-   ollama run <model> "You are a casual notification voice assistant. An AI agent just finished a task. Write ONE short casual sentence (under 15 words) saying what it did. Sound like a chill coworker. Task: Explore HelloSign integration. Output: Mapped the complete HelloSign signing flow, API endpoints, authentication, and signer configuration."
+   ollama run <model> "You are a casual notification voice assistant. An AI agent just finished a task. Write ONE short casual sentence (under 30 words) saying what it did. ALWAYS end with a question like requesting the user to take a look. The sentence should be a statement of completion. Sound like a chill coworker. Task: Explore HelloSign integration. Output: Hey!! Done mapping out the helloSign integration and all the API endpoints, wanna take a look?."
    ```
 
 ## Saving

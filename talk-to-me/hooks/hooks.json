@@ -1,6 +1,16 @@
 {
-  "description": "Speaks a casual summary of what the session accomplished when the main agent stops",
+  "description": "Tracks user prompts and speaks a casual summary when the main agent stops",
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-prompt.sh"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
