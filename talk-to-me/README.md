@@ -1,24 +1,24 @@
 # talk-to-me
 
-A Claude Code plugin that announces when subagents finish their tasks using local text-to-speech.
+A Claude Code plugin that speaks a casual summary of what your session accomplished when the main agent finishes.
 
-When you run parallel agents, it can be hard to notice when each one completes. This plugin uses a local LLM to summarize what the agent actually accomplished, then speaks it aloud in a casual tone — e.g., *"Done mapping out the HelloSign integration and all the API endpoints"*.
+When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin uses a local LLM to summarize the session, then speaks it aloud in a natural voice — e.g., *"Just wrapped up reviewing all the code changes and fixed a couple of bugs"*.
 
 ## How it works
 
 ```
-Agent finishes → hook extracts agent output (first 2000 chars)
-    → ollama summarizes it into one casual sentence
-    → local TTS speaks the summary aloud
+Main agent stops → reads last messages from transcript
+    → ollama summarizes into one casual sentence
+    → piper (neural TTS) speaks the summary aloud
 ```
 
-The plugin registers a `PostToolUse` hook on the `Task` tool. When a subagent completes, it:
+The plugin registers a `Stop` hook. When the main agent finishes:
 
-1. Extracts the agent's actual output from `tool_response`
-2. Sends it to a local ollama model for a one-sentence casual summary
-3. Speaks the summary using your system's TTS engine
+1. Reads the last few assistant messages from the session transcript
+2. Sends them to a local ollama model for a one-sentence casual summary
+3. Generates natural speech via piper TTS and plays it
 
-If ollama isn't running or no models are available, the plugin stays silent — no errors, no fallback noise.
+If ollama isn't running or piper isn't installed, falls back to macOS `say` or Linux `espeak`.
 
 ## Quick start
 
@@ -28,26 +28,27 @@ After installing the plugin, run:
 /talk-to-me:setup
 ```
 
-This checks and installs all dependencies (jq, ollama, a model, TTS engine), then verifies the full pipeline works end-to-end. You'll hear a test announcement when it's done.
+This installs all dependencies (jq, ollama, piper, a voice model), then verifies the full pipeline.
 
 ## Requirements
 
-These are handled automatically by `/talk-to-me:setup`, but for reference:
+Handled automatically by `/talk-to-me:setup`:
 
 - **ollama** — local LLM runtime ([install](https://ollama.com))
 - **jq** — JSON parsing (`brew install jq` / `apt install jq`)
-- A pulled ollama model (any small model works — `ollama pull qwen2.5:3b`)
+- **piper-tts** — neural text-to-speech (`pip install piper-tts`)
+- A piper voice model (~65MB, downloaded during setup)
+- An ollama model (any small model — `ollama pull qwen2.5:3b`)
 
 ## Platform support
 
-| Platform | TTS engine | Install |
+| Platform | TTS engine | Quality |
 |----------|-----------|---------|
-| macOS | `say` (built-in) | Nothing to install |
-| Linux | `espeak` | `sudo apt install espeak` |
-| Linux | `spd-say` (speech-dispatcher) | `sudo apt install speech-dispatcher` |
-| Linux | `festival` | `sudo apt install festival` |
+| macOS / Linux | **piper** (neural) | Natural, human-like |
+| macOS | `say` (fallback) | Robotic but built-in |
+| Linux | `espeak` / `spd-say` / `festival` (fallback) | Robotic but built-in |
 
-The plugin tries each engine in order and uses the first one available.
+Piper is recommended. It's fast (sub-second), cross-platform, and sounds natural. The plugin auto-detects the best available engine.
 
 ## Installation
 
@@ -82,25 +83,15 @@ In Claude Code:
 
 Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
 
-### From an existing marketplace
-
-If this plugin is included in a marketplace you already use:
-
-```
-/plugin install talk-to-me@<marketplace-name>
-```
-
-Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
-
 ## Configuration
 
 Use the `/talk-to-me:voice` command inside Claude Code to configure everything interactively.
 
 ```
-/talk-to-me:voice              # Interactive setup — voice, rate, and model
-/talk-to-me:voice list         # List available voices and models
+/talk-to-me:voice              # Interactive setup — engine, voice, and model
+/talk-to-me:voice list         # List available engines, voices, and models
 /talk-to-me:voice preview Sam  # Preview a specific voice
-/talk-to-me:voice set Daniel   # Set voice directly
+/talk-to-me:voice engine piper # Set the TTS engine
 /talk-to-me:voice model qwen2.5:1.5b  # Set the summarization model
 /talk-to-me:voice reset        # Reset to system defaults
 ```
@@ -111,31 +102,41 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
 
 ```json
 {
-  "voice": "Samantha",
-  "rate": null,
+  "tts_engine": "piper",
+  "piper_voice": "en_US-lessac-high",
+  "voice": "Daniel",
   "model": "qwen2.5:3b"
 }
 ```
 
 | Field | Description | Default |
 |-------|------------|---------|
-| `voice` | TTS voice name (platform-specific) | System default |
+| `tts_engine` | TTS engine (`piper`, `say`, `espeak`) | Auto-detect best |
+| `piper_voice` | Piper voice model name | `en_US-lessac-high` |
+| `voice` | Voice for say/espeak engines | System default |
 | `rate` | Speech rate (words per minute) | System default |
-| `model` | Ollama model for summarization | Auto-detect smallest available |
+| `model` | Ollama model for summarization | Auto-detect smallest |
 
 All fields are optional. Omitted fields use sensible defaults.
 
-## Recommended models
+## Piper voices
 
-Any small ollama model works. The summarization task is trivial — a sentence from a few paragraphs. Smaller = faster announcements.
+Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download from [piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/en/) or browse samples at [piper-samples](https://rhasspy.github.io/piper-samples/).
+
+| Voice | Quality | Gender | Accent |
+|-------|---------|--------|--------|
+| `en_US-lessac-high` | High | Female | US |
+| `en_US-ryan-high` | High | Male | US |
+| `en_GB-alan-medium` | Medium | Male | British |
+| `en_GB-alba-medium` | Medium | Female | British |
+
+## Recommended ollama models
 
 | Model | Size | Speed |
 |-------|------|-------|
 | `qwen2.5:0.5b` | ~400MB | Fastest |
 | `qwen2.5:1.5b` | ~1GB | Fast |
-| `llama3.2:1b` | ~700MB | Fast |
 | `qwen2.5:3b` | ~2GB | Good balance |
-| `llama3.2:3b` | ~2GB | Good balance |
 
 ## License
 

@@ -4,12 +4,14 @@
 # then speaks the summary using local TTS.
 # Falls silent if ollama is unavailable — no fallback, no noise.
 #
-# Cross-platform TTS: macOS (say), Linux (espeak, spd-say, festival).
-# Reads voice/rate config from ~/.config/talk-to-me/config.json
+# TTS priority: piper (neural, natural) > macOS say > espeak > spd-say > festival
+# Reads config from ~/.config/talk-to-me/config.json
 
 set -euo pipefail
 
 INPUT=$(cat)
+TTS_DIR="/tmp/talk-to-me-tts"
+PIPER_VOICES_DIR="$HOME/.local/share/talk-to-me/piper-voices"
 
 # First-run nudge: if dependencies are missing, write a one-time hint file.
 NUDGE_FILE="$HOME/.config/talk-to-me/.setup-nudged"
@@ -60,18 +62,26 @@ if ! ollama list &>/dev/null 2>&1; then
   exit 0
 fi
 
-# Pick the model — user config or auto-detect a small one
+# Read user config
 CONFIG_FILE="$HOME/.config/talk-to-me/config.json"
 VOICE=""
 RATE=""
 MODEL=""
+TTS_ENGINE=""
+PIPER_VOICE=""
 
 if [ -f "$CONFIG_FILE" ]; then
   VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
   RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")
   MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
+  TTS_ENGINE=$(jq -r '.tts_engine // empty' "$CONFIG_FILE")
+  PIPER_VOICE=$(jq -r '.piper_voice // empty' "$CONFIG_FILE")
 fi
 
+# Default piper voice
+[ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
+
+# Auto-detect ollama model
 if [ -z "$MODEL" ]; then
   MODEL=$(ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -iE '^(qwen2\.5:0\.5b|qwen2\.5:1\.5b|qwen2\.5:3b|llama3\.2:1b|llama3\.2:3b|gemma2:2b|phi3:mini|smollm)' | head -1)
 fi
@@ -98,24 +108,73 @@ if [ -z "$MESSAGE" ]; then
   exit 0
 fi
 
-# Speak it
-if command -v say &>/dev/null; then
+# --- TTS Engine Functions ---
+
+speak_piper() {
+  local model_path="$PIPER_VOICES_DIR/$PIPER_VOICE.onnx"
+  if [ ! -f "$model_path" ]; then
+    return 1
+  fi
+  mkdir -p "$TTS_DIR"
+  local wav="$TTS_DIR/output.wav"
+  echo "$1" | piper --model "$model_path" --output_file "$wav" 2>/dev/null
+  if [ -f "$wav" ]; then
+    if command -v afplay &>/dev/null; then
+      afplay "$wav" &
+    elif command -v aplay &>/dev/null; then
+      aplay "$wav" &
+    fi
+  fi
+}
+
+speak_say() {
   CMD=(say)
   [ -n "$VOICE" ] && CMD+=(-v "$VOICE")
   [ -n "$RATE" ] && CMD+=(-r "$RATE")
-  "${CMD[@]}" "$MESSAGE" &
-elif command -v espeak &>/dev/null; then
+  "${CMD[@]}" "$1" &
+}
+
+speak_espeak() {
   CMD=(espeak)
   [ -n "$VOICE" ] && CMD+=(-v "$VOICE")
   [ -n "$RATE" ] && CMD+=(-s "$RATE")
-  "${CMD[@]}" "$MESSAGE" &
-elif command -v spd-say &>/dev/null; then
+  "${CMD[@]}" "$1" &
+}
+
+speak_spd_say() {
   CMD=(spd-say)
   [ -n "$VOICE" ] && CMD+=(-o "$VOICE")
   [ -n "$RATE" ] && CMD+=(-r "$RATE")
-  "${CMD[@]}" "$MESSAGE" &
+  "${CMD[@]}" "$1" &
+}
+
+speak_festival() {
+  echo "$1" | festival --tts &
+}
+
+# If user forced a specific engine, use it
+if [ -n "$TTS_ENGINE" ]; then
+  case "$TTS_ENGINE" in
+    piper)   speak_piper "$MESSAGE" ;;
+    say)     speak_say "$MESSAGE" ;;
+    espeak)  speak_espeak "$MESSAGE" ;;
+    spd-say) speak_spd_say "$MESSAGE" ;;
+    festival) speak_festival "$MESSAGE" ;;
+  esac
+  exit 0
+fi
+
+# Auto-detect best available engine
+if command -v piper &>/dev/null && [ -f "$PIPER_VOICES_DIR/$PIPER_VOICE.onnx" ]; then
+  speak_piper "$MESSAGE"
+elif command -v say &>/dev/null; then
+  speak_say "$MESSAGE"
+elif command -v espeak &>/dev/null; then
+  speak_espeak "$MESSAGE"
+elif command -v spd-say &>/dev/null; then
+  speak_spd_say "$MESSAGE"
 elif command -v festival &>/dev/null; then
-  echo "$MESSAGE" | festival --tts &
+  speak_festival "$MESSAGE"
 fi
 
 exit 0

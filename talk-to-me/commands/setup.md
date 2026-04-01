@@ -1,5 +1,5 @@
 ---
-description: Install and verify all dependencies for talk-to-me (ollama, jq, TTS engine, model)
+description: Install and verify all dependencies for talk-to-me (ollama, jq, piper TTS, voice model)
 allowed-tools: Bash, Read, Write
 ---
 
@@ -18,17 +18,29 @@ Run these checks in order. For each one, check if it exists, and if not, offer t
 - **Linux (Debian/Ubuntu)**: `sudo apt install -y jq`
 - **Linux (Fedora)**: `sudo dnf install -y jq`
 
-### 2. TTS engine
+### 2. TTS engine (Piper recommended)
 
-Check which TTS engine is available. At least one is required.
+**Piper — neural TTS, natural sounding, cross-platform:**
+- **Check**: `command -v piper`
+- **Install**: `pip3 install piper-tts` (or `pip3 install --break-system-packages piper-tts` if needed)
+- If piper install fails due to pip restrictions, try: `pipx install piper-tts` or `brew install piper`
 
-- **macOS**: `say` is built-in — just verify with `command -v say`
-- **Linux**: check for `espeak`, `spd-say`, or `festival` in that order
-
-If on Linux and none are found, recommend:
+**Download a voice model** (required for piper):
 ```sh
-sudo apt install -y espeak    # Lightweight, good enough
+mkdir -p ~/.local/share/talk-to-me/piper-voices
+cd ~/.local/share/talk-to-me/piper-voices
+curl -sL "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/high/en_US-lessac-high.onnx" -o en_US-lessac-high.onnx
+curl -sL "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/high/en_US-lessac-high.onnx.json" -o en_US-lessac-high.onnx.json
 ```
+
+**Verify piper works**:
+```sh
+echo "Just finished setting up the talk to me plugin" | piper --model ~/.local/share/talk-to-me/piper-voices/en_US-lessac-high.onnx --output_file /tmp/piper-test.wav && afplay /tmp/piper-test.wav
+```
+
+If the user doesn't want to install piper, fallbacks are available:
+- **macOS**: `say` is built-in (robotic but works)
+- **Linux**: `espeak`, `spd-say`, or `festival`
 
 ### 3. ollama
 
@@ -38,11 +50,9 @@ sudo apt install -y espeak    # Lightweight, good enough
 
 After installing, check if the ollama server is running:
 - **Check**: `ollama list` (if it errors, the server isn't running)
-- **Start**: `ollama serve &` (or tell user it runs as a background service on Linux after install)
+- **Start**: `brew services start ollama` (macOS) or `ollama serve &`
 
-On macOS, after `brew install ollama`, the user needs to start the Ollama app or run `ollama serve` in the background. Check if it's running and guide them.
-
-### 4. Pull a model
+### 4. Pull an ollama model
 
 - **Check**: `ollama list` — look for any model
 - If no models: `ollama pull qwen2.5:3b` (good balance of speed and quality)
@@ -50,27 +60,40 @@ On macOS, after `brew install ollama`, the user needs to start the Ollama app or
 
 ### 5. Verify the full pipeline
 
-Run an end-to-end test by piping sample hook input through the script:
-
+Test piper TTS directly:
 ```sh
-echo '{"tool_input":{"description":"Explore HelloSign integration"},"tool_response":[{"type":"text","text":"Mapped the complete HelloSign signing flow including API endpoints, authentication setup, and signer configuration. Found that documents are sent ad-hoc without templates, using a single hardcoded signer."}]}' | ${CLAUDE_PLUGIN_ROOT}/scripts/talk-to-me.sh
+echo "Just wrapped up all the code changes and everything looks good" | piper --model ~/.local/share/talk-to-me/piper-voices/en_US-lessac-high.onnx --output_file /tmp/piper-test.wav && afplay /tmp/piper-test.wav
 ```
 
-If the user hears a spoken summary, setup is complete. If not, diagnose which step failed.
+If the user hears the speech, setup is complete.
 
 ### 6. Optional: configure voice and model
 
-After everything works, mention that `/talk-to-me:voice` lets them customize the TTS voice, speech rate, and ollama model.
+After everything works, mention that `/talk-to-me:voice` lets them customize the TTS engine, piper voice, and ollama model.
+
+## Available piper voices
+
+If the user wants to try different voices, these are good English options. Download both the `.onnx` and `.onnx.json` files to `~/.local/share/talk-to-me/piper-voices/`:
+
+| Voice | Quality | Gender | Accent | Size |
+|-------|---------|--------|--------|------|
+| `en_US-lessac-high` | High | Female | US | ~65MB |
+| `en_US-lessac-medium` | Medium | Female | US | ~65MB |
+| `en_US-ryan-high` | High | Male | US | ~65MB |
+| `en_US-amy-medium` | Medium | Female | US | ~65MB |
+| `en_GB-alan-medium` | Medium | Male | British | ~65MB |
+| `en_GB-alba-medium` | Medium | Female | British | ~65MB |
+
+Base URL: `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/`
+Full catalog: https://rhasspy.github.io/piper-samples/
 
 ## Reset nudge marker
 
-After a successful setup, remove the first-run nudge marker so the hook knows everything is configured:
+After a successful setup, remove the first-run nudge marker:
 
 ```sh
 rm -f ~/.config/talk-to-me/.setup-nudged
 ```
-
-This ensures the hook won't show the "run /talk-to-me:setup" message again, and also means if someone later uninstalls a dependency, the hook will re-detect and nudge again on next run.
 
 ## Output
 
@@ -80,7 +103,7 @@ At the end, show a summary:
 Setup complete!
 
   jq:      ✓ installed
-  TTS:     ✓ say (macOS)
+  TTS:     ✓ piper (en_US-lessac-high)
   ollama:  ✓ running
   model:   ✓ qwen2.5:3b
 
