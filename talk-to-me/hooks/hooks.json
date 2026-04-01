@@ -1,0 +1,16 @@
+{
+  "description": "Speaks a casual summary of what the session accomplished when the main agent stops",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/talk-to-me.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

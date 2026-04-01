@@ -1,0 +1,13 @@
+{
+  "name": "talk-to-me",
+  "owner": {
+    "name": "Isuru"
+  },
+  "plugins": [
+    {
+      "name": "talk-to-me",
+      "source": "./talk-to-me",
+      "description": "Announces when subagents finish their tasks using local text-to-speech"
+    }
+  ]
+}

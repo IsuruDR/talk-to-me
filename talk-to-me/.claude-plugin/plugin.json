@@ -1,0 +1,9 @@
+{
+  "name": "talk-to-me",
+  "version": "1.0.0",
+  "description": "Announces when subagents finish their tasks using local text-to-speech. Uses a local LLM to summarize what the agent accomplished, then speaks it aloud.",
+  "author": {
+    "name": "Isuru"
+  },
+  "keywords": ["notification", "tts", "text-to-speech", "agents", "accessibility"]
+}
