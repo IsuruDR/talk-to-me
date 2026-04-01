@@ -10,7 +10,7 @@
 set -euo pipefail
 
 INPUT=$(cat)
-TTS_DIR="/tmp/talk-to-me-tts"
+TTS_DIR="/tmp/talk-to-me-tts/$$"
 PIPER_VOICES_DIR="$HOME/.local/share/talk-to-me/piper-voices"
 
 # First-run nudge: if dependencies are missing, write a one-time hint file.
@@ -151,9 +151,9 @@ speak_piper() {
   echo "$1" | piper --model "$model_path" --output_file "$wav" 2>/dev/null
   if [ -f "$wav" ]; then
     if command -v afplay &>/dev/null; then
-      afplay "$wav" &
+      afplay "$wav" && rm -rf "$TTS_DIR" &
     elif command -v aplay &>/dev/null; then
-      aplay "$wav" &
+      aplay "$wav" && rm -rf "$TTS_DIR" &
     fi
   fi
 }
