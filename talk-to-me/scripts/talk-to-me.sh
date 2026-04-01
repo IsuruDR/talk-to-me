@@ -43,12 +43,25 @@ if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
 fi
 
+# Check elapsed time — only speak if the agent worked for over 60 seconds
+PROMPT_DIR="/tmp/talk-to-me-prompts"
+TS_FILE="$PROMPT_DIR/$SESSION_ID.ts"
+if [ -n "$SESSION_ID" ] && [ -f "$TS_FILE" ]; then
+  START_TS=$(cat "$TS_FILE")
+  NOW_TS=$(date +%s)
+  ELAPSED=$((NOW_TS - START_TS))
+  if [ "$ELAPSED" -lt 60 ]; then
+    rm -f "$TS_FILE" "$PROMPT_DIR/$SESSION_ID.txt"
+    exit 0
+  fi
+fi
+
 # Read the user's most recent prompt (saved by UserPromptSubmit hook)
 USER_PROMPT=""
-PROMPT_FILE="/tmp/talk-to-me-prompts/$SESSION_ID.txt"
+PROMPT_FILE="$PROMPT_DIR/$SESSION_ID.txt"
 if [ -n "$SESSION_ID" ] && [ -f "$PROMPT_FILE" ]; then
   USER_PROMPT=$(head -c 500 "$PROMPT_FILE")
-  rm -f "$PROMPT_FILE"
+  rm -f "$PROMPT_FILE" "$TS_FILE"
 fi
 
 # Extract the last few assistant text messages from the transcript (tail for recency)
@@ -120,7 +133,7 @@ fi
 # Avoid slang, contractions like "wanna/gonna", rhetorical questions,
 # and emoji. Use clear, simple sentences that sound natural when read
 # with flat intonation.
-PROMPT="A coding session just finished. Summarize what was done in ONE sentence under 15 words. Only describe what actually happened in the conversation below. Do not invent or assume work that is not mentioned.
+PROMPT="A coding session just finished. Summarize what was done in ONE sentence under 30 words. Only describe what actually happened in the conversation below. Do not invent or assume work that is not mentioned. It should be a statement of done. 
 
 Rules:
 - Simple clear words. No slang. No contractions like wanna or gonna.
