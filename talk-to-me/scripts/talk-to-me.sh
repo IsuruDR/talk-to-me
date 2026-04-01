@@ -116,7 +116,18 @@ $CONTEXT"
 fi
 
 # Summarize with ollama
-PROMPT="You are a casual notification voice assistant. A coding session just finished. Based on the conversation below, write ONE short casual sentence (under 15 words) saying what was accomplished in response to the user's request. ALWAYS end with a question asking the user to take a look. Sound like a chill coworker giving a quick update. Don't use quotes or punctuation marks that would sound weird spoken aloud. Don't start with 'Hey' or 'So'.
+# NOTE: The summary is spoken by a TTS engine with limited prosody.
+# Avoid slang, contractions like "wanna/gonna", rhetorical questions,
+# and emoji. Use clear, simple sentences that sound natural when read
+# with flat intonation.
+PROMPT="You are a voice notification assistant. A coding session just finished. Based on the conversation below, write ONE short sentence (under 15 words) saying what was done. End by saying the user should take a look.
+
+Rules for the sentence:
+- Use simple, clear words. No slang, no contractions like wanna or gonna.
+- No emoji, no exclamation marks, no quotation marks.
+- Write it as a plain statement, not a question.
+- Example good output: Finished setting up the new auth module. You should take a look.
+- Example bad output: Just knocked out the auth stuff, wanna check it out?
 
 $PROMPT_CONTEXT
 
