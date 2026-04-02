@@ -1,0 +1,152 @@
+# talk-to-me
+
+A Claude Code plugin that speaks a casual summary of what your session accomplished when the main agent finishes.
+
+When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin uses a local LLM to summarize the session, then speaks it aloud in a natural voice — e.g., *"talk-to-me. Finished setting up piper TTS and committed the changes."*
+
+## How it works
+
+```
+User sends prompt → UserPromptSubmit hook saves prompt + timestamp
+    → Main agent works (may spawn subagents)
+    → Main agent stops → Stop hook fires
+    → Checks if elapsed time > min_duration (default 60s)
+    → Reads user prompt + last assistant messages from transcript
+    → ollama summarizes into one clear sentence
+    → Prepends project directory name
+    → piper (neural TTS) speaks the summary aloud
+```
+
+The plugin registers two hooks:
+
+1. **UserPromptSubmit** — saves the user's prompt and a timestamp for each session
+2. **Stop** — when the main agent finishes, checks elapsed time, reads the transcript, summarizes via ollama, and speaks via piper TTS
+
+Quick interactions (under 60 seconds) stay silent. Only longer tasks get announced.
+
+If ollama isn't running or piper isn't installed, falls back to macOS `say` or Linux `espeak`.
+
+## Quick start
+
+After installing the plugin, run:
+
+```
+/talk-to-me:setup
+```
+
+This installs all dependencies (jq, ollama, piper, a voice model), then verifies the full pipeline.
+
+## Requirements
+
+Handled automatically by `/talk-to-me:setup`:
+
+- **ollama** — local LLM runtime ([install](https://ollama.com))
+- **jq** — JSON parsing (`brew install jq` / `apt install jq`)
+- **piper-tts** — neural text-to-speech (`pip install piper-tts`)
+- A piper voice model (~65MB, downloaded during setup)
+- An ollama model (any small model — `ollama pull qwen2.5:3b`)
+
+## Platform support
+
+| Platform | TTS engine | Quality |
+|----------|-----------|---------|
+| macOS / Linux | **piper** (neural) | Natural, human-like |
+| macOS | `say` (fallback) | Robotic but built-in |
+| Linux | `espeak` / `spd-say` / `festival` (fallback) | Robotic but built-in |
+
+Piper is recommended. It's fast (sub-second), cross-platform, and sounds natural. The plugin auto-detects the best available engine.
+
+## Installation
+
+### From GitHub (recommended)
+
+In Claude Code, run:
+
+```
+/plugin marketplace add IsuruDR/talk-to-me
+```
+
+Then install the plugin:
+
+```
+/plugin install talk-to-me@talk-to-me
+```
+
+Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
+
+### From a local clone
+
+```sh
+git clone https://github.com/IsuruDR/talk-to-me.git
+```
+
+In Claude Code:
+
+```
+/plugin marketplace add /path/to/talk-to-me
+/plugin install talk-to-me@talk-to-me
+```
+
+Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
+
+## Configuration
+
+Use the `/talk-to-me:voice` command inside Claude Code to configure everything interactively.
+
+```
+/talk-to-me:voice                    # Interactive setup — engine, voice, and model
+/talk-to-me:voice list               # List available engines, voices, and models
+/talk-to-me:voice preview Sam        # Preview a specific voice
+/talk-to-me:voice engine piper       # Set the TTS engine
+/talk-to-me:voice model qwen2.5:1.5b # Set the summarization model
+/talk-to-me:voice duration 30        # Set minimum duration before speaking (seconds)
+/talk-to-me:voice reset              # Reset to system defaults
+```
+
+### Config file
+
+Settings are stored in `~/.config/talk-to-me/config.json`:
+
+```json
+{
+  "tts_engine": "piper",
+  "piper_voice": "en_US-lessac-high",
+  "voice": "Daniel",
+  "model": "qwen2.5:3b",
+  "min_duration": 60
+}
+```
+
+| Field | Description | Default |
+|-------|------------|---------|
+| `tts_engine` | TTS engine (`piper`, `say`, `espeak`) | Auto-detect best |
+| `piper_voice` | Piper voice model name | `en_US-lessac-high` |
+| `voice` | Voice for say/espeak engines | System default |
+| `rate` | Speech rate (words per minute) | System default |
+| `model` | Ollama model for summarization | Auto-detect smallest |
+| `min_duration` | Minimum seconds before speaking | `60` (set `0` for always) |
+
+All fields are optional. Omitted fields use sensible defaults.
+
+## Piper voices
+
+Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download from [piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/en/) or browse samples at [piper-samples](https://rhasspy.github.io/piper-samples/).
+
+| Voice | Quality | Gender | Accent |
+|-------|---------|--------|--------|
+| `en_US-lessac-high` | High | Female | US |
+| `en_US-ryan-high` | High | Male | US |
+| `en_GB-alan-medium` | Medium | Male | British |
+| `en_GB-alba-medium` | Medium | Female | British |
+
+## Recommended ollama models
+
+| Model | Size | Speed |
+|-------|------|-------|
+| `qwen2.5:0.5b` | ~400MB | Fastest |
+| `qwen2.5:1.5b` | ~1GB | Fast |
+| `qwen2.5:3b` | ~2GB | Good balance |
+
+## License
+
+MIT
