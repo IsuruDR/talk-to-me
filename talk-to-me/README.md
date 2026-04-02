@@ -2,21 +2,27 @@
 
 A Claude Code plugin that speaks a casual summary of what your session accomplished when the main agent finishes.
 
-When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin uses a local LLM to summarize the session, then speaks it aloud in a natural voice — e.g., *"Just wrapped up reviewing all the code changes and fixed a couple of bugs"*.
+When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin uses a local LLM to summarize the session, then speaks it aloud in a natural voice — e.g., *"talk-to-me. Finished setting up piper TTS and committed the changes."*
 
 ## How it works
 
 ```
-Main agent stops → reads last messages from transcript
-    → ollama summarizes into one casual sentence
+User sends prompt → UserPromptSubmit hook saves prompt + timestamp
+    → Main agent works (may spawn subagents)
+    → Main agent stops → Stop hook fires
+    → Checks if elapsed time > min_duration (default 60s)
+    → Reads user prompt + last assistant messages from transcript
+    → ollama summarizes into one clear sentence
+    → Prepends project directory name
     → piper (neural TTS) speaks the summary aloud
 ```
 
-The plugin registers a `Stop` hook. When the main agent finishes:
+The plugin registers two hooks:
 
-1. Reads the last few assistant messages from the session transcript
-2. Sends them to a local ollama model for a one-sentence casual summary
-3. Generates natural speech via piper TTS and plays it
+1. **UserPromptSubmit** — saves the user's prompt and a timestamp for each session
+2. **Stop** — when the main agent finishes, checks elapsed time, reads the transcript, summarizes via ollama, and speaks via piper TTS
+
+Quick interactions (under 60 seconds) stay silent. Only longer tasks get announced.
 
 If ollama isn't running or piper isn't installed, falls back to macOS `say` or Linux `espeak`.
 
@@ -57,7 +63,7 @@ Piper is recommended. It's fast (sub-second), cross-platform, and sounds natural
 In Claude Code, run:
 
 ```
-/plugin marketplace add your-username/talk-to-me
+/plugin marketplace add IsuruDR/talk-to-me
 ```
 
 Then install the plugin:
@@ -71,7 +77,7 @@ Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
 ### From a local clone
 
 ```sh
-git clone https://github.com/your-username/talk-to-me.git
+git clone https://github.com/IsuruDR/talk-to-me.git
 ```
 
 In Claude Code:
@@ -88,12 +94,13 @@ Restart Claude Code, then run `/talk-to-me:setup` to install dependencies.
 Use the `/talk-to-me:voice` command inside Claude Code to configure everything interactively.
 
 ```
-/talk-to-me:voice              # Interactive setup — engine, voice, and model
-/talk-to-me:voice list         # List available engines, voices, and models
-/talk-to-me:voice preview Sam  # Preview a specific voice
-/talk-to-me:voice engine piper # Set the TTS engine
-/talk-to-me:voice model qwen2.5:1.5b  # Set the summarization model
-/talk-to-me:voice reset        # Reset to system defaults
+/talk-to-me:voice                    # Interactive setup — engine, voice, and model
+/talk-to-me:voice list               # List available engines, voices, and models
+/talk-to-me:voice preview Sam        # Preview a specific voice
+/talk-to-me:voice engine piper       # Set the TTS engine
+/talk-to-me:voice model qwen2.5:1.5b # Set the summarization model
+/talk-to-me:voice duration 30        # Set minimum duration before speaking (seconds)
+/talk-to-me:voice reset              # Reset to system defaults
 ```
 
 ### Config file
@@ -105,7 +112,8 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
   "tts_engine": "piper",
   "piper_voice": "en_US-lessac-high",
   "voice": "Daniel",
-  "model": "qwen2.5:3b"
+  "model": "qwen2.5:3b",
+  "min_duration": 60
 }
 ```
 
@@ -116,6 +124,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
 | `voice` | Voice for say/espeak engines | System default |
 | `rate` | Speech rate (words per minute) | System default |
 | `model` | Ollama model for summarization | Auto-detect smallest |
+| `min_duration` | Minimum seconds before speaking | `60` (set `0` for always) |
 
 All fields are optional. Omitted fields use sensible defaults.
 
