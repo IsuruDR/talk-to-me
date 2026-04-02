@@ -1,8 +1,7 @@
 #!/bin/bash
 # Speaks a casual summary of what the session accomplished when the main agent stops.
-# Reads the last few assistant messages from the transcript, summarizes via ollama,
+# Reads the last few assistant messages from the transcript, summarizes via claude CLI,
 # then speaks the summary using local TTS.
-# Falls silent if ollama is unavailable — no fallback, no noise.
 #
 # TTS priority: piper (neural, natural) > macOS say > espeak > spd-say > festival
 # Reads config from ~/.config/talk-to-me/config.json
@@ -18,17 +17,11 @@ NUDGE_FILE="$HOME/.config/talk-to-me/.setup-nudged"
 if [ ! -f "$NUDGE_FILE" ]; then
   MISSING=""
   command -v jq &>/dev/null || MISSING="jq"
-  command -v ollama &>/dev/null || MISSING="${MISSING:+$MISSING, }ollama"
+  command -v claude &>/dev/null || MISSING="${MISSING:+$MISSING, }claude"
   if [ -n "$MISSING" ]; then
     mkdir -p "$HOME/.config/talk-to-me"
     touch "$NUDGE_FILE"
     echo "[talk-to-me] Missing dependencies: $MISSING. Run /talk-to-me:setup to install everything." >&2
-    exit 1
-  fi
-  if command -v ollama &>/dev/null && ! ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -q '.'; then
-    mkdir -p "$HOME/.config/talk-to-me"
-    touch "$NUDGE_FILE"
-    echo "[talk-to-me] ollama is installed but has no models. Run /talk-to-me:setup to pull one." >&2
     exit 1
   fi
   mkdir -p "$HOME/.config/talk-to-me"
@@ -49,7 +42,6 @@ CONFIG_FILE="$HOME/.config/talk-to-me/config.json"
 MIN_DURATION=60
 VOICE=""
 RATE=""
-MODEL=""
 TTS_ENGINE=""
 PIPER_VOICE=""
 
@@ -57,7 +49,6 @@ if [ -f "$CONFIG_FILE" ]; then
   MIN_DURATION=$(jq -r '.min_duration // 60' "$CONFIG_FILE")
   VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
   RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")
-  MODEL=$(jq -r '.model // empty' "$CONFIG_FILE")
   TTS_ENGINE=$(jq -r '.tts_engine // empty' "$CONFIG_FILE")
   PIPER_VOICE=$(jq -r '.piper_voice // empty' "$CONFIG_FILE")
 fi
@@ -66,7 +57,6 @@ fi
 [ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
 
 # Check elapsed time — only speak if the agent worked long enough
-
 PROMPT_DIR="/tmp/talk-to-me-prompts"
 TS_FILE="$PROMPT_DIR/$SESSION_ID.ts"
 if [ -n "$SESSION_ID" ] && [ -f "$TS_FILE" ]; then
@@ -98,29 +88,12 @@ if [ -z "$CONTEXT" ]; then
   exit 0
 fi
 
-# Need ollama to summarize — stay silent if unavailable
-if ! command -v ollama &>/dev/null; then
+# Need claude CLI to summarize — stay silent if unavailable
+if ! command -v claude &>/dev/null; then
   exit 0
 fi
 
-if ! ollama list &>/dev/null 2>&1; then
-  exit 0
-fi
-
-# Auto-detect ollama model
-if [ -z "$MODEL" ]; then
-  MODEL=$(ollama list 2>/dev/null | awk 'NR>1 {print $1}' | grep -iE '^(qwen2\.5:0\.5b|qwen2\.5:1\.5b|qwen2\.5:3b|llama3\.2:1b|llama3\.2:3b|gemma2:2b|phi3:mini|smollm)' | head -1)
-fi
-
-if [ -z "$MODEL" ]; then
-  MODEL=$(ollama list 2>/dev/null | awk 'NR>1 {print $1}' | head -1)
-fi
-
-if [ -z "$MODEL" ]; then
-  exit 0
-fi
-
-# Build the ollama prompt with user question + assistant context
+# Build the prompt with user question + assistant context
 PROMPT_CONTEXT=""
 if [ -n "$USER_PROMPT" ]; then
   PROMPT_CONTEXT="User asked: $USER_PROMPT
@@ -132,12 +105,12 @@ else
 $CONTEXT"
 fi
 
-# Summarize with ollama
+# Summarize with claude CLI (headless mode)
 # NOTE: The summary is spoken by a TTS engine with limited prosody.
 # Avoid slang, contractions like "wanna/gonna", rhetorical questions,
 # and emoji. Use clear, simple sentences that sound natural when read
 # with flat intonation.
-PROMPT="A coding session just finished. Summarize what was done in ONE sentence under 30 words. Only describe what actually happened in the conversation below. Do not invent or assume work that is not mentioned. It should be a statement of done. 
+PROMPT="A coding session just finished. Summarize what was done in ONE sentence under 30 words. Only describe what actually happened in the conversation below. Do not invent or assume work that is not mentioned. It should be a statement of done.
 
 Rules:
 - Simple clear words. No slang. No contractions like wanna or gonna.
@@ -146,9 +119,9 @@ Rules:
 
 $PROMPT_CONTEXT
 
-Your one-sentence casual summary:"
+Your one-sentence summary:"
 
-SUMMARY=$(ollama run "$MODEL" "$PROMPT" 2>/dev/null | tr -d '\n' | head -c 200)
+SUMMARY=$(echo "$PROMPT" | claude --print --model haiku 2>/dev/null | tr -d '\n' | head -c 200)
 
 if [ -z "$SUMMARY" ]; then
   exit 0

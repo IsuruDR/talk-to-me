@@ -1,11 +1,11 @@
 ---
-description: Configure TTS engine, voice, and summarization model for session completion announcements
+description: Configure TTS engine, voice, and settings for session completion announcements
 allowed-tools: Bash, Read, Write
 ---
 
 # Voice Configuration
 
-Help the user configure the talk-to-me plugin: TTS engine, voice, and the ollama model used to summarize session output.
+Help the user configure the talk-to-me plugin: TTS engine, voice, and minimum duration threshold.
 
 ## Config location
 
@@ -17,7 +17,6 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
   "piper_voice": "en_US-lessac-high",
   "voice": "Daniel",
   "rate": null,
-  "model": "qwen2.5:3b",
   "min_duration": 60
 }
 ```
@@ -26,7 +25,6 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
 - `piper_voice`: piper voice model name (without `.onnx` extension). Default `"en_US-lessac-high"`. Only used when tts_engine is piper.
 - `voice`: voice name for say/espeak/spd-say engines. `null` means system default.
 - `rate`: speech rate override (words per minute) for say/espeak/spd-say. `null` means system default.
-- `model`: ollama model for summarization. `null` means auto-detect the smallest available model.
 - `min_duration`: minimum seconds the agent must work before speaking a summary. Default `60`. Set to `0` to always speak.
 
 ## Behavior
@@ -38,13 +36,10 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
    - macOS say: `command -v say`
    - Linux espeak/spd-say/festival
 
-3. **Check ollama status**: run `ollama list` to see which models are available.
-
-4. **Show current configuration** in a clean summary, then **ask what the user wants to do**:
+3. **Show current configuration** in a clean summary, then **ask what the user wants to do**:
    - Preview a voice / TTS engine
    - Change the TTS engine
    - Change the voice
-   - Change the summarization model
    - Change the minimum duration threshold
    - Reset to defaults
 
@@ -60,25 +55,14 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
   - `en_GB-alba-medium` — Female British
 - **Preview a piper voice**:
   ```sh
-  echo "Done mapping out the HelloSign integration and all the API endpoints" | piper --model ~/.local/share/talk-to-me/piper-voices/<voice_name>.onnx --output_file /tmp/talk-to-me-preview.wav && afplay /tmp/talk-to-me-preview.wav
+  echo "Finished setting up the new database indexes and verified query performance" | piper --model ~/.local/share/talk-to-me/piper-voices/<voice_name>.onnx --output_file /tmp/talk-to-me-preview.wav && afplay /tmp/talk-to-me-preview.wav
   ```
 - **To download a new voice**: download both `.onnx` and `.onnx.json` from https://huggingface.co/rhasspy/piper-voices/tree/main/en/ to `~/.local/share/talk-to-me/piper-voices/`
 - Full voice catalog with samples: https://rhasspy.github.io/piper-samples/
 
 ### macOS say — fallback
-- **Preview**: `say -v "<voice_name>" "Done mapping out the HelloSign integration and all the API endpoints"`
+- **Preview**: `say -v "<voice_name>" "Finished setting up the new database indexes and verified query performance"`
 - **List voices**: `say -v '?' | grep "en_"`
-
-## Model selection
-
-When the user wants to change the ollama summarization model:
-1. Show available models from `ollama list`
-2. Recommend lightweight models for speed: qwen2.5:0.5b, qwen2.5:1.5b, qwen2.5:3b, llama3.2:1b, llama3.2:3b, gemma2:2b
-3. If the user wants a model that isn't pulled yet, offer to pull it with `ollama pull <model>`
-4. Let them test the model by running a sample summarization:
-   ```
-   ollama run <model> "You are a casual notification voice assistant. An AI agent just finished a task. Write ONE short casual sentence (under 30 words) saying what it did. ALWAYS end with a question like requesting the user to take a look. The sentence should be a statement of completion. Sound like a chill coworker. Task: Explore HelloSign integration. Output: Done mapping out the helloSign integration and all the API endpoints, please take a look."
-   ```
 
 ## Saving
 
@@ -90,8 +74,7 @@ If the user passes arguments to this command:
 - `/talk-to-me:voice preview <name>` — preview that voice (auto-detects engine)
 - `/talk-to-me:voice engine <name>` — set the TTS engine (piper, say, espeak)
 - `/talk-to-me:voice set <name>` — set the voice for the current engine
-- `/talk-to-me:voice model <name>` — set the ollama model
 - `/talk-to-me:voice duration <seconds>` — set minimum duration before speaking (default 60)
 - `/talk-to-me:voice reset` — reset to system defaults (delete config file)
-- `/talk-to-me:voice list` — list available engines, voices, and models
+- `/talk-to-me:voice list` — list available engines and voices
 - No arguments — run the full interactive flow

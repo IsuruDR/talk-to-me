@@ -1,5 +1,5 @@
 ---
-description: Install and verify all dependencies for talk-to-me (ollama, jq, piper TTS, voice model)
+description: Install and verify all dependencies for talk-to-me (jq, piper TTS, voice model)
 allowed-tools: Bash, Read, Write
 ---
 
@@ -18,7 +18,12 @@ Run these checks in order. For each one, check if it exists, and if not, offer t
 - **Linux (Debian/Ubuntu)**: `sudo apt install -y jq`
 - **Linux (Fedora)**: `sudo dnf install -y jq`
 
-### 2. TTS engine (Piper recommended)
+### 2. Claude CLI
+
+- **Check**: `command -v claude`
+- This should already be installed since the user is running the plugin from Claude Code. If missing, something is wrong with their setup.
+
+### 3. TTS engine (Piper recommended)
 
 **Piper — neural TTS, natural sounding, cross-platform:**
 - **Check**: `command -v piper`
@@ -42,23 +47,7 @@ If the user doesn't want to install piper, fallbacks are available:
 - **macOS**: `say` is built-in (robotic but works)
 - **Linux**: `espeak`, `spd-say`, or `festival`
 
-### 3. ollama
-
-- **Check**: `command -v ollama`
-- **macOS**: `brew install ollama`
-- **Linux**: `curl -fsSL https://ollama.com/install.sh | sh`
-
-After installing, check if the ollama server is running:
-- **Check**: `ollama list` (if it errors, the server isn't running)
-- **Start**: `brew services start ollama` (macOS) or `ollama serve &`
-
-### 4. Pull an ollama model
-
-- **Check**: `ollama list` — look for any model
-- If no models: `ollama pull qwen2.5:3b` (good balance of speed and quality)
-- If models exist already, show them and confirm one will be used
-
-### 5. Verify the full pipeline
+### 4. Verify the full pipeline
 
 Test piper TTS directly:
 ```sh
@@ -67,9 +56,9 @@ echo "Just wrapped up all the code changes and everything looks good" | piper --
 
 If the user hears the speech, setup is complete.
 
-### 6. Optional: configure voice and model
+### 5. Optional: configure voice and settings
 
-After everything works, mention that `/talk-to-me:voice` lets them customize the TTS engine, piper voice, and ollama model.
+After everything works, mention that `/talk-to-me:voice` lets them customize the TTS engine, piper voice, and minimum duration threshold.
 
 ## Available piper voices
 
@@ -103,11 +92,10 @@ At the end, show a summary:
 Setup complete!
 
   jq:      ✓ installed
+  claude:  ✓ available
   TTS:     ✓ piper (en_US-lessac-high)
-  ollama:  ✓ running
-  model:   ✓ qwen2.5:3b
 
-Run /talk-to-me:voice to customize the voice and model.
+Run /talk-to-me:voice to customize the voice and settings.
 ```
 
 ## Arguments
