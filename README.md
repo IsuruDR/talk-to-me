@@ -24,6 +24,8 @@ The plugin registers two hooks:
 
 Quick interactions (under 60 seconds) stay silent. Only longer tasks get announced.
 
+Generated audio files are written to a PID-scoped temp directory (`/tmp/talk-to-me-tts/{pid}/`) and automatically cleaned up after playback completes.
+
 If piper isn't installed, falls back to macOS `say` or Linux `espeak`.
 
 ## Quick start
