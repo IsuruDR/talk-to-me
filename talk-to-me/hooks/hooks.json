@@ -1,26 +1,4 @@
 {
-  "description": "Tracks user prompts and speaks a casual summary when the main agent stops",
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/save-prompt.sh"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/talk-to-me.sh",
-            "timeout": 120
-          }
-        ]
-      }
-    ]
-  }
+  "description": "talk-to-me hooks. Registered in user settings by /talk-to-me:setup for reliability.",
+  "hooks": {}
 }
