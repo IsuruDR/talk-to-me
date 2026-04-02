@@ -38,6 +38,7 @@ fi
 # Get session info from the Stop hook input
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty')
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
 
 if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
   exit 0
@@ -147,10 +148,22 @@ $PROMPT_CONTEXT
 
 Your one-sentence casual summary:"
 
-MESSAGE=$(ollama run "$MODEL" "$PROMPT" 2>/dev/null | tr -d '\n' | head -c 200)
+SUMMARY=$(ollama run "$MODEL" "$PROMPT" 2>/dev/null | tr -d '\n' | head -c 200)
 
-if [ -z "$MESSAGE" ]; then
+if [ -z "$SUMMARY" ]; then
   exit 0
+fi
+
+# Prepend project directory name for context
+PROJECT_NAME=""
+if [ -n "$CWD" ]; then
+  PROJECT_NAME=$(basename "$CWD")
+fi
+
+if [ -n "$PROJECT_NAME" ]; then
+  MESSAGE="In $PROJECT_NAME. $SUMMARY"
+else
+  MESSAGE="$SUMMARY"
 fi
 
 # --- TTS Engine Functions ---
