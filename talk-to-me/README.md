@@ -137,6 +137,22 @@ Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download f
 | `en_GB-alan-medium` | Medium | Male | British |
 | `en_GB-alba-medium` | Medium | Female | British |
 
+## Uninstall
+
+1. **Remove hooks** from `~/.claude/settings.json` — delete the `UserPromptSubmit` and `Stop` entries that reference `talk-to-me`
+
+2. **Uninstall the plugin** in Claude Code:
+   ```
+   /plugin uninstall talk-to-me@talk-to-me
+   /plugin marketplace remove talk-to-me
+   ```
+
+3. **Clean up data** (optional):
+   ```sh
+   rm -rf ~/.config/talk-to-me
+   rm -rf ~/.local/share/talk-to-me
+   ```
+
 ## License
 
 MIT
