@@ -92,7 +92,13 @@ Or use the source path directly if the plugin was installed from a local clone.
 
 **Check for duplicates** — if the user already has UserPromptSubmit or Stop hooks from a previous setup, don't add duplicates. Append to the existing arrays if other hooks are present.
 
-### 5. Verify the full pipeline
+### 5. Reload plugins
+
+After registering hooks, tell the user to run `/reload-plugins` so the hooks take effect in the current session without restarting Claude Code. Wait for them to confirm before proceeding to verification.
+
+> "Run `/reload-plugins` now so the hooks are active in this session."
+
+### 6. Verify the full pipeline
 
 Test piper TTS directly:
 ```sh
@@ -101,7 +107,7 @@ echo "Just wrapped up all the code changes and everything looks good" | piper --
 
 If the user hears the speech, setup is complete.
 
-### 6. Optional: configure voice and settings
+### 7. Optional: configure voice and settings
 
 After everything works, mention that `/talk-to-me:voice` lets them customize the TTS engine, piper voice, and minimum duration threshold.
 
