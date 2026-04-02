@@ -161,7 +161,7 @@ if [ -n "$CWD" ]; then
 fi
 
 if [ -n "$PROJECT_NAME" ]; then
-  MESSAGE="In $PROJECT_NAME. $SUMMARY"
+  MESSAGE="$PROJECT_NAME. $SUMMARY"
 else
   MESSAGE="$SUMMARY"
 fi
