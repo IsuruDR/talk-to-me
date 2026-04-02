@@ -6,15 +6,31 @@ When you're running parallel agents and multitasking, it's easy to miss when Cla
 
 ## How it works
 
-```
-User sends prompt → UserPromptSubmit hook saves prompt + timestamp
-    → Main agent works (may spawn subagents)
-    → Main agent stops → Stop hook fires
-    → Checks if elapsed time > min_duration (default 5 min)
-    → Reads user prompt + last assistant messages from transcript
-    → claude --print --model haiku summarizes into one clear sentence
-    → Prepends project directory name
-    → piper (neural TTS) speaks the summary aloud
+```mermaid
+flowchart TD
+    A[User sends prompt] --> B[UserPromptSubmit hook]
+    B --> C[Save prompt + timestamp to /tmp]
+    C --> D[Main agent works]
+    D --> E{Spawns subagents?}
+    E -->|Yes| F[Subagents run in parallel]
+    E -->|No| G[Agent completes]
+    F --> G
+    G --> H[Stop hook fires]
+    H --> I{Elapsed time >= 5 min?}
+    I -->|No| J[Stay silent]
+    I -->|Yes| K[Read saved prompt + transcript tail]
+    K --> L[claude --print --model haiku\nsummarizes into one sentence]
+    L --> M[Prepend project directory name]
+    M --> N{Piper installed?}
+    N -->|Yes| O[Generate WAV via piper]
+    O --> P[Play audio via afplay/aplay]
+    P --> Q[Clean up temp files]
+    N -->|No| R[Fallback: say / espeak]
+
+    style A fill:#4a9eff,color:#fff
+    style J fill:#888,color:#fff
+    style P fill:#2ecc71,color:#fff
+    style R fill:#f39c12,color:#fff
 ```
 
 The plugin registers two hooks:
