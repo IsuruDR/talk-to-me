@@ -10,7 +10,7 @@ When you're running parallel agents and multitasking, it's easy to miss when Cla
 User sends prompt → UserPromptSubmit hook saves prompt + timestamp
     → Main agent works (may spawn subagents)
     → Main agent stops → Stop hook fires
-    → Checks if elapsed time > min_duration (default 60s)
+    → Checks if elapsed time > min_duration (default 5 min)
     → Reads user prompt + last assistant messages from transcript
     → claude --print --model haiku summarizes into one clear sentence
     → Prepends project directory name
@@ -22,7 +22,7 @@ The plugin registers two hooks:
 1. **UserPromptSubmit** — saves the user's prompt and a timestamp for each session
 2. **Stop** — when the main agent finishes, checks elapsed time, reads the transcript, summarizes via `claude --print`, and speaks via piper TTS
 
-Quick interactions (under 60 seconds) stay silent. Only longer tasks get announced.
+Quick interactions (under 5 minutes) stay silent. Only longer tasks get announced.
 
 Generated audio files are written to a PID-scoped temp directory (`/tmp/talk-to-me-tts/{pid}/`) and automatically cleaned up after playback completes.
 
@@ -114,7 +114,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
   "tts_engine": "piper",
   "piper_voice": "en_US-lessac-high",
   "voice": "Daniel",
-  "min_duration": 60
+  "min_duration": 300
 }
 ```
 
@@ -124,7 +124,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
 | `piper_voice` | Piper voice model name | `en_US-lessac-high` |
 | `voice` | Voice for say/espeak engines | System default |
 | `rate` | Speech rate (words per minute) | System default |
-| `min_duration` | Minimum seconds before speaking | `60` (set `0` for always) |
+| `min_duration` | Minimum seconds before speaking | `300` (set `0` for always) |
 
 All fields are optional. Omitted fields use sensible defaults.
 

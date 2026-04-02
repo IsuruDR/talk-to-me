@@ -39,14 +39,14 @@ fi
 
 # Read all user config upfront
 CONFIG_FILE="$HOME/.config/talk-to-me/config.json"
-MIN_DURATION=60
+MIN_DURATION=300
 VOICE=""
 RATE=""
 TTS_ENGINE=""
 PIPER_VOICE=""
 
 if [ -f "$CONFIG_FILE" ]; then
-  MIN_DURATION=$(jq -r '.min_duration // 60' "$CONFIG_FILE")
+  MIN_DURATION=$(jq -r '.min_duration // 300' "$CONFIG_FILE")
   VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
   RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")
   TTS_ENGINE=$(jq -r '.tts_engine // empty' "$CONFIG_FILE")
