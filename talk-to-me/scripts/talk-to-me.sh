@@ -52,6 +52,10 @@ TTS_ENGINE=""
 PIPER_VOICE=""
 
 if [ -f "$CONFIG_FILE" ]; then
+  ENABLED=$(jq -r '.enabled // true' "$CONFIG_FILE")
+  if [ "$ENABLED" = "false" ]; then
+    exit 0
+  fi
   MIN_DURATION=$(jq -r '.min_duration // 300' "$CONFIG_FILE")
   VOICE=$(jq -r '.voice // empty' "$CONFIG_FILE")
   RATE=$(jq -r '.rate // empty' "$CONFIG_FILE")

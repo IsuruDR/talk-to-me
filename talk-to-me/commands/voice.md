@@ -13,6 +13,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
 
 ```json
 {
+  "enabled": true,
   "tts_engine": "piper",
   "piper_voice": "en_US-lessac-high",
   "voice": "Daniel",
@@ -21,6 +22,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
 }
 ```
 
+- `enabled`: whether talk-to-me is active. `true` (default) or `false` to disable without uninstalling.
 - `tts_engine`: which TTS to use — `"piper"`, `"say"`, `"espeak"`, `"spd-say"`, `"festival"`. `null` means auto-detect best available.
 - `piper_voice`: piper voice model name (without `.onnx` extension). Default `"en_US-lessac-high"`. Only used when tts_engine is piper.
 - `voice`: voice name for say/espeak/spd-say engines. `null` means system default.
@@ -37,6 +39,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
    - Linux espeak/spd-say/festival
 
 3. **Show current configuration** in a clean summary, then **ask what the user wants to do**:
+   - Turn on / off
    - Preview a voice / TTS engine
    - Change the TTS engine
    - Change the voice
@@ -71,6 +74,8 @@ When the user picks settings, write the config to `~/.config/talk-to-me/config.j
 ## Arguments
 
 If the user passes arguments to this command:
+- `/talk-to-me:voice on` — enable talk-to-me
+- `/talk-to-me:voice off` — disable talk-to-me (keeps config, just silences it)
 - `/talk-to-me:voice preview <name>` — preview that voice (auto-detects engine)
 - `/talk-to-me:voice engine <name>` — set the TTS engine (piper, say, espeak)
 - `/talk-to-me:voice set <name>` — set the voice for the current engine
