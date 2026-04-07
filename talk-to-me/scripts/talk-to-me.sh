@@ -28,6 +28,12 @@ if [ ! -f "$NUDGE_FILE" ]; then
   touch "$NUDGE_FILE"
 fi
 
+# Skip subagent completions — only speak for the main session
+AGENT_ID=$(echo "$INPUT" | jq -r '.agent_id // empty')
+if [ -n "$AGENT_ID" ]; then
+  exit 0
+fi
+
 # Get session info from the Stop hook input
 TRANSCRIPT=$(echo "$INPUT" | jq -r '.transcript_path // empty')
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
