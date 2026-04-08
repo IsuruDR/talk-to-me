@@ -67,7 +67,6 @@ When the user picks settings, write the config to `~/.config/talk-to-me/config.j
 If the user passes arguments to this command:
 - `/talk-to-me:voice on` — enable talk-to-me
 - `/talk-to-me:voice off` — disable talk-to-me (keeps config, just silences it)
-- `/talk-to-me:voice engine <name>` — set the TTS engine (piper, say, espeak)
 - `/talk-to-me:voice duration <seconds>` — set minimum duration before speaking (default 300)
 - `/talk-to-me:voice reset` — reset to system defaults (delete config file)
 - `/talk-to-me:voice list` — list available engines and voices
