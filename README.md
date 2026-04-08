@@ -2,7 +2,11 @@
 
 A Claude Code plugin that speaks a casual summary of what your session accomplished when the main agent finishes.
 
-When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin summarizes the session via Claude CLI, then speaks it aloud in a natural voice — e.g., *"talk-to-me. Finished setting up piper TTS and committed the changes."*
+When you're running parallel agents and multitasking, it's easy to miss when Claude is done. This plugin summarizes the session via Claude CLI, then speaks a meaningful summary, aloud in a natural voice — e.g., *"talk-to-me. Finished setting up piper TTS and committed the changes."*
+
+You can configure the task duration so you are in control on when it speaks. Default is 5 mins, so it will only speak for tasks that are running longer than 5 minutes by default.
+
+Also, it detects if you are in a meeting and stays silent! 
 
 ## How it works
 
