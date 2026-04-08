@@ -140,7 +140,13 @@ Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download f
 
 ## Uninstall
 
-Run `/talk-to-me:uninstall` in Claude Code. This removes hooks from settings, uninstalls piper, and cleans up all data.
+Fist run
+
+```
+/talk-to-me:uninstall
+``` 
+
+This removes hooks from settings, uninstalls piper, and cleans up all data.
 
 Then remove the plugin itself:
 
