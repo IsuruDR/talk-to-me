@@ -79,16 +79,12 @@ Under `"hooks"`, add:
 ]
 ```
 
-**IMPORTANT**: Replace `${CLAUDE_PLUGIN_ROOT}` with the actual plugin path. Find it by checking where the plugin is cached:
+**IMPORTANT**: Replace `${CLAUDE_PLUGIN_ROOT}` with the actual plugin path. Resolve it dynamically:
 ```sh
-ls ~/.claude/plugins/cache/talk-to-me/talk-to-me/*/scripts/talk-to-me.sh
+PLUGIN_ROOT=$(dirname $(dirname $(ls ~/.claude/plugins/cache/talk-to-me/talk-to-me/*/scripts/talk-to-me.sh 2>/dev/null | head -1)))
 ```
 
-Use that resolved path in the hooks. For example if the cache path is `~/.claude/plugins/cache/talk-to-me/talk-to-me/1.0.0/`, the commands would be:
-- `~/.claude/plugins/cache/talk-to-me/talk-to-me/1.0.0/scripts/save-prompt.sh`
-- `~/.claude/plugins/cache/talk-to-me/talk-to-me/1.0.0/scripts/talk-to-me.sh`
-
-Or use the source path directly if the plugin was installed from a local clone.
+Use `$PLUGIN_ROOT/scripts/save-prompt.sh` and `$PLUGIN_ROOT/scripts/talk-to-me.sh` in the hooks. This works regardless of the installed version number.
 
 **Check for duplicates** — if the user already has UserPromptSubmit or Stop hooks from a previous setup, don't add duplicates. Append to the existing arrays if other hooks are present.
 
