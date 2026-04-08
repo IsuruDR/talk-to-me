@@ -78,11 +78,11 @@ Run
 /reload-plugins
 ```
 
-then run 
+then run (MUST RUN)
 ```
 /talk-to-me:setup
 ``` 
-to install dependencies and register hooks.
+to install dependencies and register hooks. **Note:** It will download piper and a voice model.
 
 **`/talk-to-me:setup` is required** — it installs piper, downloads a voice model, and registers the Stop/UserPromptSubmit hooks in your settings. The plugin will not work without running setup first.
 
@@ -158,7 +158,7 @@ Fist run
 /talk-to-me:uninstall
 ``` 
 
-This removes hooks from settings, uninstalls piper, and cleans up all data.
+This removes hooks from settings, uninstalls piper, and cleans up all data. You might need to allow Claude Code to edit the settings files.
 
 Then remove the plugin itself:
 
