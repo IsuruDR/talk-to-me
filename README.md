@@ -97,8 +97,10 @@ Use the `/talk-to-me:voice` command inside Claude Code to configure everything i
 
 ```
 /talk-to-me:voice                    # Interactive setup — engine, voice, and duration
+/talk-to-me:voice on                 # Enable talk-to-me
+/talk-to-me:voice off                # Disable without uninstalling
 /talk-to-me:voice list               # List available engines and voices
-/talk-to-me:voice preview Sam        # Preview a specific voice
+/talk-to-me:voice preview en_US-ryan-high  # Preview a specific voice
 /talk-to-me:voice engine piper       # Set the TTS engine
 /talk-to-me:voice duration 30        # Set minimum duration before speaking (seconds)
 /talk-to-me:voice reset              # Reset to system defaults
