@@ -107,9 +107,9 @@ echo "Just wrapped up all the code changes and everything looks good" | piper --
 
 If the user hears the speech, setup is complete.
 
-### 7. Optional: configure voice and settings
+### 7. Optional: configure duration threshold
 
-After everything works, mention that `/talk-to-me:voice` lets them customize the TTS engine, piper voice, and minimum duration threshold.
+After everything works, mention that `/talk-to-me:duration` lets them change the minimum seconds before speaking (default 300). Set to `0` to always speak.
 
 ## Available piper voices
 
@@ -147,7 +147,7 @@ Setup complete!
   TTS:     ✓ piper (en_US-lessac-high)
   hooks:   ✓ registered in settings.json
 
-Run /talk-to-me:voice to customize the voice and settings.
+Run /talk-to-me:duration to change when it speaks.
 ```
 
 ## Arguments
