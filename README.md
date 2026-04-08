@@ -103,17 +103,14 @@ In Claude Code:
 
 Restart Claude Code, then run `/talk-to-me:setup` to install dependencies and register hooks.
 
-## Configuration
-
-Use the `/talk-to-me:voice` command inside Claude Code to configure everything interactively.
+## Commands
 
 ```
-/talk-to-me:voice                    # Interactive setup — engine, voice, and duration
-/talk-to-me:voice on                 # Enable talk-to-me
-/talk-to-me:voice off                # Disable without uninstalling
-/talk-to-me:voice list               # List available engines and voices
-/talk-to-me:voice duration 30        # Set minimum duration before speaking (seconds)
-/talk-to-me:voice reset              # Reset to system defaults
+/talk-to-me:setup                    # Install dependencies and register hooks
+/talk-to-me:on                       # Enable talk-to-me
+/talk-to-me:off                      # Disable without uninstalling
+/talk-to-me:duration 60              # Set minimum duration before speaking (seconds)
+/talk-to-me:uninstall                # Remove hooks and clean up all data
 ```
 
 ### Config file
@@ -122,33 +119,29 @@ Settings are stored in `~/.config/talk-to-me/config.json`:
 
 ```json
 {
-  "tts_engine": "piper",
-  "piper_voice": "en_US-lessac-high",
-  "voice": "Daniel",
+  "enabled": true,
   "min_duration": 300
 }
 ```
 
 | Field | Description | Default |
 |-------|------------|---------|
-| `tts_engine` | TTS engine (`piper`, `say`, `espeak`) | Auto-detect best |
-| `piper_voice` | Piper voice model name | `en_US-lessac-high` |
-| `voice` | Voice for say/espeak engines | System default |
-| `rate` | Speech rate (words per minute) | System default |
+| `enabled` | Whether talk-to-me is active | `true` |
 | `min_duration` | Minimum seconds before speaking | `300` (set `0` for always) |
 
 All fields are optional. Omitted fields use sensible defaults.
 
-## Piper voices
+## Updating
 
-Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download from [piper-voices](https://huggingface.co/rhasspy/piper-voices/tree/main/en/) or browse samples at [piper-samples](https://rhasspy.github.io/piper-samples/).
+The `/plugin update` command may not detect new versions automatically. To update, reinstall:
 
-| Voice | Quality | Gender | Accent |
-|-------|---------|--------|--------|
-| `en_US-lessac-high` | High | Female | US |
-| `en_US-ryan-high` | High | Male | US |
-| `en_GB-alan-medium` | Medium | Male | British |
-| `en_GB-alba-medium` | Medium | Female | British |
+```
+/plugin uninstall talk-to-me
+/plugin install talk-to-me@talk-to-me
+/reload-plugins
+```
+
+Then re-run `/talk-to-me:setup` to re-register hooks.
 
 ## Uninstall
 
