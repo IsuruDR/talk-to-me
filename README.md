@@ -72,9 +72,21 @@ Then install the plugin:
 /plugin install talk-to-me@talk-to-me
 ```
 
-Restart Claude Code, then run `/talk-to-me:setup` to install dependencies and register hooks.
+Run 
+
+```
+/reload-plugins
+```
+
+then run 
+```
+/talk-to-me:setup
+``` 
+to install dependencies and register hooks.
 
 **`/talk-to-me:setup` is required** — it installs piper, downloads a voice model, and registers the Stop/UserPromptSubmit hooks in your settings. The plugin will not work without running setup first.
+
+It would say out load "Just wrapped up all the code changes and everything looks good" after a successful setup 😁
 
 ### From a local clone
 
