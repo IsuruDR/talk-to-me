@@ -40,7 +40,6 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
 
 3. **Show current configuration** in a clean summary, then **ask what the user wants to do**:
    - Turn on / off
-   - Preview a voice / TTS engine
    - Change the TTS engine
    - Change the voice
    - Change the minimum duration threshold
@@ -56,15 +55,7 @@ Settings are stored in `~/.config/talk-to-me/config.json`. Create the directory 
   - `en_US-ryan-high` — Male US
   - `en_GB-alan-medium` — Male British
   - `en_GB-alba-medium` — Female British
-- **Preview a piper voice**:
-  ```sh
-  echo "Finished setting up the new database indexes and verified query performance" | piper --model ~/.local/share/talk-to-me/piper-voices/<voice_name>.onnx --output_file /tmp/talk-to-me-preview.wav && afplay /tmp/talk-to-me-preview.wav
-  ```
-- **To download a new voice**: download both `.onnx` and `.onnx.json` from https://huggingface.co/rhasspy/piper-voices/tree/main/en/ to `~/.local/share/talk-to-me/piper-voices/`
-- Full voice catalog with samples: https://rhasspy.github.io/piper-samples/
-
 ### macOS say — fallback
-- **Preview**: `say -v "<voice_name>" "Finished setting up the new database indexes and verified query performance"`
 - **List voices**: `say -v '?' | grep "en_"`
 
 ## Saving
@@ -76,9 +67,7 @@ When the user picks settings, write the config to `~/.config/talk-to-me/config.j
 If the user passes arguments to this command:
 - `/talk-to-me:voice on` — enable talk-to-me
 - `/talk-to-me:voice off` — disable talk-to-me (keeps config, just silences it)
-- `/talk-to-me:voice preview <name>` — preview that voice (auto-detects engine)
 - `/talk-to-me:voice engine <name>` — set the TTS engine (piper, say, espeak)
-- `/talk-to-me:voice set <name>` — set the voice for the current engine
 - `/talk-to-me:voice duration <seconds>` — set minimum duration before speaking (default 300)
 - `/talk-to-me:voice reset` — reset to system defaults (delete config file)
 - `/talk-to-me:voice list` — list available engines and voices
