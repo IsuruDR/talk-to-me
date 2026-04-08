@@ -66,6 +66,21 @@ fi
 # Default piper voice
 [ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
 
+# Check if microphone is active (user likely in a meeting) — stay silent
+is_mic_active() {
+  case "$(uname)" in
+    Darwin)
+      swift -e 'import AVFoundation; print(AVCaptureDevice.default(for: .audio)?.isInUseByAnotherApplication ?? false)' 2>/dev/null | grep -q "true" && return 0 ;;
+    Linux)
+      [ "$(pactl list source-outputs 2>/dev/null | grep -c 'Corked: no')" -gt 0 ] && return 0 ;;
+  esac
+  return 1
+}
+
+if is_mic_active; then
+  exit 0
+fi
+
 # Check elapsed time — only speak if the agent worked long enough
 PROMPT_DIR="/tmp/talk-to-me-prompts"
 TS_FILE="$PROMPT_DIR/$SESSION_ID.ts"
