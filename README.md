@@ -148,7 +148,14 @@ Voice models are stored in `~/.local/share/talk-to-me/piper-voices/`. Download f
    /plugin marketplace remove talk-to-me
    ```
 
-3. **Clean up data** (optional):
+3. **Uninstall piper TTS**:
+   ```sh
+   pip3 uninstall piper-tts
+   # or if installed via brew:
+   brew uninstall piper
+   ```
+
+4. **Clean up data and voices**:
    ```sh
    rm -rf ~/.config/talk-to-me
    rm -rf ~/.local/share/talk-to-me
