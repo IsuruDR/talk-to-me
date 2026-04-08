@@ -66,8 +66,14 @@ fi
 # Default piper voice
 [ -z "$PIPER_VOICE" ] && PIPER_VOICE="en_US-lessac-high"
 
-# Check if microphone is active (user likely in a meeting) — stay silent
-is_mic_active() {
+# Check if user is in a meeting or mic is active — stay silent
+is_in_meeting() {
+  # Check for known meeting app call processes (works even with mic muted)
+  pgrep -x CptHost >/dev/null 2>&1 && return 0       # Zoom in-call
+  pgrep -f "Microsoft Teams.*callservice" >/dev/null 2>&1 && return 0  # Teams in-call
+  pgrep -f "FaceTime" >/dev/null 2>&1 && return 0     # FaceTime
+
+  # Fallback: check if mic hardware is active (catches any app using mic)
   case "$(uname)" in
     Darwin)
       swift -e 'import AVFoundation; print(AVCaptureDevice.default(for: .audio)?.isInUseByAnotherApplication ?? false)' 2>/dev/null | grep -q "true" && return 0 ;;
@@ -77,7 +83,7 @@ is_mic_active() {
   return 1
 }
 
-if is_mic_active; then
+if is_in_meeting; then
   exit 0
 fi
 
