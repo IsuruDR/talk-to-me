@@ -170,7 +170,30 @@ else
   MESSAGE="$SUMMARY"
 fi
 
-# --- TTS Engine Functions ---
+# --- Playback lock (serialize across parallel sessions) ---
+
+LOCK_DIR="/tmp/talk-to-me-playback.lock"
+LOCK_TIMEOUT=30
+
+acquire_playback_lock() {
+  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+    # Remove stale lock (older than LOCK_TIMEOUT seconds)
+    if [ -d "$LOCK_DIR" ]; then
+      case "$(uname)" in
+        Darwin) LOCK_AGE=$(( $(date +%s) - $(stat -f %m "$LOCK_DIR") )) ;;
+        *)      LOCK_AGE=$(( $(date +%s) - $(stat -c %Y "$LOCK_DIR") )) ;;
+      esac
+      [ "$LOCK_AGE" -gt "$LOCK_TIMEOUT" ] && rmdir "$LOCK_DIR" 2>/dev/null
+    fi
+    sleep 0.5
+  done
+}
+
+release_playback_lock() {
+  rmdir "$LOCK_DIR" 2>/dev/null
+}
+
+# --- TTS Engine Functions (foreground — lock must be held) ---
 
 speak_piper() {
   local model_path="$PIPER_VOICES_DIR/$PIPER_VOICE.onnx"
@@ -182,10 +205,11 @@ speak_piper() {
   echo "$1" | piper --model "$model_path" --output_file "$wav" 2>/dev/null
   if [ -f "$wav" ]; then
     if command -v afplay &>/dev/null; then
-      afplay "$wav" && rm -rf "$TTS_DIR" &
+      afplay "$wav"
     elif command -v aplay &>/dev/null; then
-      aplay "$wav" && rm -rf "$TTS_DIR" &
+      aplay "$wav"
     fi
+    rm -rf "$TTS_DIR"
   fi
 }
 
@@ -193,26 +217,30 @@ speak_say() {
   CMD=(say)
   [ -n "$VOICE" ] && CMD+=(-v "$VOICE")
   [ -n "$RATE" ] && CMD+=(-r "$RATE")
-  "${CMD[@]}" "$1" &
+  "${CMD[@]}" "$1"
 }
 
 speak_espeak() {
   CMD=(espeak)
   [ -n "$VOICE" ] && CMD+=(-v "$VOICE")
   [ -n "$RATE" ] && CMD+=(-s "$RATE")
-  "${CMD[@]}" "$1" &
+  "${CMD[@]}" "$1"
 }
 
 speak_spd_say() {
   CMD=(spd-say)
   [ -n "$VOICE" ] && CMD+=(-o "$VOICE")
   [ -n "$RATE" ] && CMD+=(-r "$RATE")
-  "${CMD[@]}" "$1" &
+  "${CMD[@]}" "$1"
 }
 
 speak_festival() {
-  echo "$1" | festival --tts &
+  echo "$1" | festival --tts
 }
+
+# Acquire lock, speak, release
+acquire_playback_lock
+trap release_playback_lock EXIT
 
 # If user forced a specific engine, use it
 if [ -n "$TTS_ENGINE" ]; then
